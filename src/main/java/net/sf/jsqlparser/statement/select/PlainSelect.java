@@ -21,20 +21,21 @@
  */
 package net.sf.jsqlparser.statement.select;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import net.sf.jsqlparser.expression.Expression;
-import net.sf.jsqlparser.schema.Table;
-
-import java.util.Iterator;
-import java.util.List;
 import net.sf.jsqlparser.expression.OracleHierarchicalExpression;
 import net.sf.jsqlparser.expression.OracleHint;
+import net.sf.jsqlparser.schema.Table;
+import net.sf.jsqlparser.parser.ASTNodeAccessImpl;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * The core of a "SELECT" statement (no UNION, no ORDER BY)
  */
-public class PlainSelect implements SelectBody {
+public class PlainSelect extends ASTNodeAccessImpl implements SelectBody {
 
     private Distinct distinct = null;
     private List<SelectItem> selectItems;
@@ -57,6 +58,8 @@ public class PlainSelect implements SelectBody {
     private boolean forUpdate = false;
     private Table forUpdateTable = null;
     private boolean useBrackets = false;
+    private Wait wait;
+    private boolean mySqlSqlCalcFoundRows = false;
 
     public boolean isUseBrackets() {
         return useBrackets;
@@ -80,8 +83,7 @@ public class PlainSelect implements SelectBody {
     }
 
     /**
-     * The {@link SelectItem}s in this query (for example the A,B,C in "SELECT
-     * A,B,C")
+     * The {@link SelectItem}s in this query (for example the A,B,C in "SELECT A,B,C")
      *
      * @return a list of {@link SelectItem}s
      */
@@ -189,7 +191,7 @@ public class PlainSelect implements SelectBody {
     public void setFirst(First first) {
         this.first = first;
     }
-    
+
     public Distinct getDistinct() {
         return distinct;
     }
@@ -207,8 +209,8 @@ public class PlainSelect implements SelectBody {
     }
 
     /**
-     * A list of {@link Expression}s of the GROUP BY clause. It is null in case
-     * there is no GROUP BY clause
+     * A list of {@link Expression}s of the GROUP BY clause. It is null in case there is no GROUP BY
+     * clause
      *
      * @return a list of {@link Expression}s
      */
@@ -267,6 +269,24 @@ public class PlainSelect implements SelectBody {
         this.oracleHint = oracleHint;
     }
 
+    /**
+     * Sets the {@link Wait} for this SELECT
+     *
+     * @param wait the {@link Wait} for this SELECT
+     */
+    public void setWait(final Wait wait) {
+        this.wait = wait;
+    }
+
+    /**
+     * Returns the value of the {@link Wait} set for this SELECT
+     *
+     * @return the value of the {@link Wait} set for this SELECT
+     */
+    public Wait getWait() {
+        return wait;
+    }
+
     @Override
     public String toString() {
         StringBuilder sql = new StringBuilder();
@@ -274,7 +294,7 @@ public class PlainSelect implements SelectBody {
             sql.append("(");
         }
         sql.append("SELECT ");
-        
+
         if (oracleHint != null) {
             sql.append(oracleHint).append(" ");
         }
@@ -282,16 +302,19 @@ public class PlainSelect implements SelectBody {
         if (skip != null) {
             sql.append(skip).append(" ");
         }
-        
+
         if (first != null) {
             sql.append(first).append(" ");
         }
-        
+
         if (distinct != null) {
             sql.append(distinct).append(" ");
         }
         if (top != null) {
             sql.append(top).append(" ");
+        }
+        if (mySqlSqlCalcFoundRows) {
+            sql.append("SQL_CALC_FOUND_ROWS").append(" ");
         }
         sql.append(getStringList(selectItems));
 
@@ -344,6 +367,11 @@ public class PlainSelect implements SelectBody {
                 if (forUpdateTable != null) {
                     sql.append(" OF ").append(forUpdateTable);
                 }
+
+                if (wait != null) {
+                    // Wait's toString will do the formatting for us
+                    sql.append(wait);
+                }
             }
         } else {
             //without from
@@ -384,8 +412,8 @@ public class PlainSelect implements SelectBody {
     }
 
     /**
-     * List the toString out put of the objects in the List comma separated. If
-     * the List is null or empty an empty string is returned.
+     * List the toString out put of the objects in the List comma separated. If the List is null or
+     * empty an empty string is returned.
      *
      * The same as getStringList(list, true, false)
      *
@@ -398,8 +426,8 @@ public class PlainSelect implements SelectBody {
     }
 
     /**
-     * List the toString out put of the objects in the List that can be comma
-     * separated. If the List is null or empty an empty string is returned.
+     * List the toString out put of the objects in the List that can be comma separated. If the List
+     * is null or empty an empty string is returned.
      *
      * @param list list of objects with toString methods
      * @param useComma true if the list has to be comma separated
@@ -407,7 +435,7 @@ public class PlainSelect implements SelectBody {
      * @return comma separated list of the elements in the list
      */
     public static String getStringList(List<?> list, boolean useComma, boolean useBrackets) {
-        StringBuilder ans=new StringBuilder();
+        StringBuilder ans = new StringBuilder();
 //        String ans = "";
         String comma = ",";
         if (!useComma) {
@@ -420,7 +448,7 @@ public class PlainSelect implements SelectBody {
             }
 
             for (int i = 0; i < list.size(); i++) {
-                ans.append(list.get(i)).append(((i < list.size() - 1) ? comma + " " : ""));
+                ans.append(list.get(i)).append((i < list.size() - 1) ? comma + " " : "");
 //                ans += "" + list.get(i) + ((i < list.size() - 1) ? comma + " " : "");
             }
 
@@ -431,5 +459,13 @@ public class PlainSelect implements SelectBody {
         }
 
         return ans.toString();
+    }
+
+    public void setMySqlSqlCalcFoundRows(boolean mySqlCalcFoundRows) {
+        this.mySqlSqlCalcFoundRows = mySqlCalcFoundRows;
+    }
+
+    public boolean getMySqlSqlCalcFoundRows() {
+        return this.mySqlSqlCalcFoundRows;
     }
 }

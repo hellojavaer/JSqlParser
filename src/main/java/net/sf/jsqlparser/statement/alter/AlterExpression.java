@@ -21,14 +21,14 @@
  */
 package net.sf.jsqlparser.statement.alter;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 import net.sf.jsqlparser.statement.create.table.ColDataType;
 import net.sf.jsqlparser.statement.create.table.Index;
 import net.sf.jsqlparser.statement.select.PlainSelect;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 /**
  *
@@ -53,6 +53,9 @@ public class AlterExpression {
     private List<String> fkColumns;
     private String fkSourceTable;
     private List<String> fkSourceColumns;
+
+    private List<ConstraintState> constraints;
+    private List<String> parameters;
 
     public AlterOperation getOperation() {
         return operation;
@@ -173,6 +176,25 @@ public class AlterExpression {
         this.index = index;
     }
 
+    public List<ConstraintState> getConstraints() {
+        return constraints;
+    }
+
+    public void setConstraints(List<ConstraintState> constraints) {
+        this.constraints = constraints;
+    }
+
+    public void addParameters(String... params) {
+        if (parameters == null) {
+            parameters = new ArrayList<String>();
+        }
+        parameters.addAll(Arrays.asList(params));
+    }
+
+    public List<String> getParameters() {
+        return parameters;
+    }
+
     @Override
     public String toString() {
 
@@ -185,7 +207,9 @@ public class AlterExpression {
         } else if (getColDataTypeList() != null) {
             if (colDataTypeList.size() > 1) {
                 b.append("(");
-            } else b.append("COLUMN ");
+            } else {
+                b.append("COLUMN ");
+            }
             b.append(PlainSelect.getStringList(colDataTypeList));
             if (colDataTypeList.size() > 1) {
                 b.append(")");
@@ -193,11 +217,13 @@ public class AlterExpression {
         } else if (constraintName != null) {
             b.append("CONSTRAINT ").append(constraintName);
         } else if (pkColumns != null) {
-            b.append("PRIMARY KEY (").append(PlainSelect.getStringList(pkColumns)).append(")");
+            b.append("PRIMARY KEY (").append(PlainSelect.getStringList(pkColumns)).append(')');
         } else if (ukColumns != null) {
-            b.append("UNIQUE KEY ").append(ukName).append(" (").append(PlainSelect.getStringList(ukColumns)).append(")");
+            b.append("UNIQUE KEY ").append(ukName).append(" (").append(PlainSelect.
+                    getStringList(ukColumns)).append(")");
         } else if (fkColumns != null) {
-            b.append("FOREIGN KEY (").append(PlainSelect.getStringList(fkColumns)).append(") REFERENCES ").append(fkSourceTable).append(" (").append(
+            b.append("FOREIGN KEY (").append(PlainSelect.getStringList(fkColumns)).
+                    append(") REFERENCES ").append(fkSourceTable).append(" (").append(
                     PlainSelect.getStringList(fkSourceColumns)).append(")");
             if (isOnDeleteCascade()) {
                 b.append(" ON DELETE CASCADE");
@@ -208,6 +234,12 @@ public class AlterExpression {
             }
         } else if (index != null) {
             b.append(index);
+        }
+        if (getConstraints() != null && !getConstraints().isEmpty()) {
+            b.append(' ').append(PlainSelect.getStringList(constraints, false, false));
+        }
+        if (parameters!=null && !parameters.isEmpty()) {
+            b.append(' ').append(PlainSelect.getStringList(parameters, false, false));
         }
 
         return b.toString();
@@ -245,8 +277,7 @@ public class AlterExpression {
             return columnName + " " + colDataType + parametersToString();
         }
 
-        private String parametersToString()
-        {
+        private String parametersToString() {
             if (columnSpecs == null || columnSpecs.isEmpty()) {
                 return "";
             }

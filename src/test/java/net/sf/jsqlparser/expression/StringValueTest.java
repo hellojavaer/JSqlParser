@@ -30,27 +30,26 @@ import static org.junit.Assert.*;
  * @author toben
  */
 public class StringValueTest {
-    
+
     public StringValueTest() {
     }
-    
+
     @BeforeClass
     public static void setUpClass() {
     }
-    
+
     @AfterClass
     public static void tearDownClass() {
     }
-    
+
     @Before
     public void setUp() {
     }
-    
+
     @After
     public void tearDown() {
     }
 
-    
     @Test
     public void testGetValue() {
         StringValue instance = new StringValue("'*'");
@@ -58,7 +57,7 @@ public class StringValueTest {
         String result = instance.getValue();
         assertEquals(expResult, result);
     }
-    
+
     @Test
     public void testGetValue2_issue329() {
         StringValue instance = new StringValue("*");
@@ -76,5 +75,18 @@ public class StringValueTest {
         String expResult = "*'*";
         String result = instance.getNotExcapedValue();
         assertEquals(expResult, result);
+    }
+
+    @Test
+    public void testPrefixes() {
+        checkStringValue("E'test'", "test", 'E');
+        checkStringValue("'test'", "test", null);
+
+    }
+
+    private void checkStringValue(String original, String expectedValue, Character expectedPrefix) {
+        StringValue v = new StringValue(original);
+        assertEquals(expectedValue, v.getValue());
+        assertEquals(expectedPrefix, v.getPrefix());
     }
 }

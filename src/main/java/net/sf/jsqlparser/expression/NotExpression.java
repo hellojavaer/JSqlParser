@@ -21,32 +21,34 @@
  */
 package net.sf.jsqlparser.expression;
 
+import net.sf.jsqlparser.parser.ASTNodeAccessImpl;
+
 /**
  * It represents a "-" or "+" before an expression
  */
-public class NotExpression implements Expression {
+public class NotExpression extends ASTNodeAccessImpl implements Expression {
 
-	private Expression expression;
+    private Expression expression;
 
-	public NotExpression(Expression expression) {
-		setExpression(expression);
-	}
-    
-	public Expression getExpression() {
-		return expression;
-	}
+    public NotExpression(Expression expression) {
+        setExpression(expression);
+    }
 
-	public final void setExpression(Expression expression) {
-		this.expression = expression;
-	}
+    public Expression getExpression() {
+        return expression;
+    }
 
-	@Override
-	public void accept(ExpressionVisitor expressionVisitor) {
-		expressionVisitor.visit(this);
-	}
+    public final void setExpression(Expression expression) {
+        this.expression = expression;
+    }
 
-	@Override
-	public String toString() {
-		return "NOT " + expression.toString();
-	}
+    @Override
+    public void accept(ExpressionVisitor expressionVisitor) {
+        expressionVisitor.visit(this);
+    }
+
+    @Override
+    public String toString() {
+        return "NOT " + expression.toString();
+    }
 }

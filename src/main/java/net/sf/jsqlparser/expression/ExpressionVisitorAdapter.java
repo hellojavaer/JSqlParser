@@ -227,11 +227,15 @@ public class ExpressionVisitorAdapter implements ExpressionVisitor, ItemsListVis
 
     @Override
     public void visit(CaseExpression expr) {
-        expr.getSwitchExpression().accept(this);
+        if (expr.getSwitchExpression() != null) {
+            expr.getSwitchExpression().accept(this);
+        }
         for (Expression x : expr.getWhenClauses()) {
             x.accept(this);
         }
-        expr.getElseExpression().accept(this);
+        if (expr.getElseExpression() != null) {
+            expr.getElseExpression().accept(this);
+        }
     }
 
     @Override
@@ -292,9 +296,15 @@ public class ExpressionVisitorAdapter implements ExpressionVisitor, ItemsListVis
 
     @Override
     public void visit(AnalyticExpression expr) {
-        expr.getExpression().accept(this);
-        expr.getDefaultValue().accept(this);
-        expr.getOffset().accept(this);
+        if (expr.getExpression() != null) {
+            expr.getExpression().accept(this);
+        }
+        if (expr.getDefaultValue() != null) {
+            expr.getDefaultValue().accept(this);
+        }
+        if (expr.getOffset() != null) {
+            expr.getOffset().accept(this);
+        }
         if (expr.getKeep() != null) {
             expr.getKeep().accept(this);
         }
@@ -302,9 +312,11 @@ public class ExpressionVisitorAdapter implements ExpressionVisitor, ItemsListVis
             element.getExpression().accept(this);
         }
 
-        expr.getWindowElement().getRange().getStart().getExpression().accept(this);
-        expr.getWindowElement().getRange().getEnd().getExpression().accept(this);
-        expr.getWindowElement().getOffset().getExpression().accept(this);
+        if (expr.getWindowElement() != null) {
+            expr.getWindowElement().getRange().getStart().getExpression().accept(this);
+            expr.getWindowElement().getRange().getEnd().getExpression().accept(this);
+            expr.getWindowElement().getOffset().getExpression().accept(this);
+        }
     }
 
     @Override
@@ -346,6 +358,16 @@ public class ExpressionVisitorAdapter implements ExpressionVisitor, ItemsListVis
         notExpr.getExpression().accept(this);
     }
 
+    @Override
+    public void visit(BitwiseRightShift expr) {
+        visitBinaryExpression(expr);
+    }
+
+    @Override
+    public void visit(BitwiseLeftShift expr) {
+        visitBinaryExpression(expr);
+    }
+
     protected void visitBinaryExpression(BinaryExpression expr) {
         expr.getLeftExpression().accept(this);
         expr.getRightExpression().accept(this);
@@ -355,7 +377,7 @@ public class ExpressionVisitorAdapter implements ExpressionVisitor, ItemsListVis
     public void visit(JsonExpression jsonExpr) {
         visit(jsonExpr.getColumn());
     }
-    
+
     @Override
     public void visit(JsonOperator expr) {
         visitBinaryExpression(expr);
@@ -364,14 +386,6 @@ public class ExpressionVisitorAdapter implements ExpressionVisitor, ItemsListVis
     @Override
     public void visit(RegExpMySQLOperator expr) {
         visitBinaryExpression(expr);
-    }
-
-    @Override
-    public void visit(WithinGroupExpression wgexpr) {
-        wgexpr.getExprList().accept(this);
-        for (OrderByElement element : wgexpr.getOrderByElements()) {
-            element.getExpression().accept(this);
-        }
     }
 
     @Override
@@ -400,6 +414,13 @@ public class ExpressionVisitorAdapter implements ExpressionVisitor, ItemsListVis
             for (OrderByElement element : groupConcat.getOrderByElements()) {
                 element.getExpression().accept(this);
             }
+        }
+    }
+    
+    @Override
+    public void visit(ValueListExpression valueListExpression) {
+        for (Expression expr : valueListExpression.getExpressionList().getExpressions()) {
+            expr.accept(this);
         }
     }
 
@@ -459,11 +480,11 @@ public class ExpressionVisitorAdapter implements ExpressionVisitor, ItemsListVis
         }
     }
 
-	@Override
-	public void visit(HexValue hexValue) {
-		
-	}
-        
+    @Override
+    public void visit(HexValue hexValue) {
+
+    }
+
     @Override
     public void visit(OracleHint hint) {
 
@@ -476,7 +497,7 @@ public class ExpressionVisitorAdapter implements ExpressionVisitor, ItemsListVis
 
     @Override
     public void visit(DateTimeLiteralExpression literal) {
-    
+
     }
 
 }
